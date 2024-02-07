@@ -1,0 +1,33 @@
+CREATE OR REPLACE PROCEDURE SP_HOSPITAL_ELIMINAR(idHospitalToDelete in number, sp_mensaje out varchar2)
+as
+
+v_hospital_exist number;
+hospital_not_found exception; 
+inHospital varchar2(50);
+
+begin
+
+    -- PRIMERO DEBEMOS CONOCER SI EL DATO EXISTE PARA PODER ELIMINAR
+    inHospital:= idHospitalToDelete;
+    
+    select count(*)
+    into v_hospital_exist
+    from Hospital h
+    where h.idhospital = inHospital;
+    
+    if v_hospital_exist = 0 then
+        raise hospital_not_found;
+    end if;
+
+    
+    -- UNA VEZ AVERIGUADO QUE SI EXISTE, TOCA ELIMINAR
+    
+    DELETE FROM HOSPITAL where idhospital=inHospital;
+    commit;
+    
+    sp_mensaje:= 'Se borro el hospital satisfactoriamente';
+    
+EXCEPTION 
+when hospital_not_found then
+    sp_mensaje:= 'No existe el hospital con el id ingresado';
+end;

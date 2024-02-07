@@ -1,0 +1,103 @@
+create or replace procedure SP_HOSPITAL_REGISTRAR(nombreDistrito in varchar2, nombre in varchar2, antiguedad in number, area in decimal, sede in varchar2, gerente in varchar2, condicion in varchar2, sp_mensaje out varchar2)
+is
+
+v_distrito_id number;
+v_sede_id number;
+v_gerente_id number;
+v_condicion_id number;
+v_count_hospitales number;
+v_max_hospital_id number;
+v_exist_hospital number;
+v_exist_hospital_nombre varchar2(100);
+v_exist_hospital_id number;
+
+v_nombre_hospital_ingresado varchar2(60);
+v_hospital_exist number;
+exist_hospital_exception exception;
+
+v_gerente_exist number;
+v_nameGerente varchar2(50);
+v_condicion_exist number;
+v_nameCondicion varchar2(50);
+v_distrito_exist number;
+v_nameDistrito varchar2(50);
+v_nameSede varchar2(50);
+
+
+
+begin
+
+    v_nombre_hospital_ingresado := nombre;
+    v_nameGerente:= gerente;
+    v_nameCondicion:= condicion;
+    v_nameDistrito:= nombreDistrito;
+    v_nameSede:= sede;
+    
+    select count(*)
+    into v_exist_hospital
+    from Hospital h
+    where h.nombre = v_nombre_hospital_ingresado;
+    
+    if v_exist_hospital > 0 then
+        raise exist_hospital_exception;
+    end if;
+
+    --- PRIMERO DEBEMOS DE VERIFICAR SI LOS DATOS
+    --- PROPORCIONADOS EXISTAN EN LA BASE DE DATOS
+
+    select d.iddistrito
+    into v_distrito_id
+    from Distrito d 
+    where d.descdistrito = v_nameDistrito;
+
+    select s.idsede
+    into v_sede_id
+    from Sede s 
+    where s.descsede = v_nameSede;
+
+    select g.idgerente 
+    into v_gerente_id
+    from Gerente g 
+    where g.descgerente = v_nameGerente;
+
+    select c.idcondicion 
+    into v_condicion_id
+    from Condicion c 
+    where c.desccondicion = v_nameCondicion;
+
+     --- SEGUNDO DEBEMOS DE CONTAR CUANTOS REGISTROS HAY EN LA TABLA DE HOSPITALES, PARA DECIDIR SI ES LA PRIMERA VEZ A INSERTAR
+
+    select count(*)
+    into v_count_hospitales
+    from Hospital;
+
+    if v_count_hospitales = 0 then
+        insert into hospital (idhospital,iddistrito,nombre,antiguedad,area,idsede,idgerente,idcondicion,fecharegistro)
+        values (1,v_distrito_id,nombre,antiguedad,area,v_sede_id,v_gerente_id,v_condicion_id,sysdate);
+        commit;
+    else
+        select max(h.idhospital) + 1
+        into v_max_hospital_id
+        from Hospital h;
+
+        insert into hospital (idhospital,iddistrito,nombre,antiguedad,area,idsede,idgerente,idcondicion,fecharegistro)
+        values (v_max_hospital_id,v_distrito_id,nombre,antiguedad,area,v_sede_id,v_gerente_id,v_condicion_id,sysdate);
+        commit;
+    end if;
+
+    sp_mensaje:='Se agregó un registro nuevo a la tabla de HOSPITAL.';
+
+EXCEPTION 
+
+when NO_DATA_FOUND then
+
+    sp_mensaje:='No se encontró información con los datos ingresados.';
+
+when exist_hospital_exception then
+
+     sp_mensaje:='El hospital a ingresar ya existe.';
+
+end;
+
+
+

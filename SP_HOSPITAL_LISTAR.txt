@@ -1,0 +1,53 @@
+CREATE OR REPLACE PROCEDURE SP_HOSPITAL_LISTAR(opcion in varchar2 default 'listar', p_filtro_hospital in number default null) 
+as
+    
+    v_opciones varchar2(30);
+    v_filtro_hospital number;
+    
+    cursor hospitales is
+        select h.nombre, g.descgerente, c.desccondicion, d.descdistrito, s.descsede
+        from HOSPITAL h 
+        inner join gerente g on g.idgerente = h.idgerente
+        inner join condicion c on c.idcondicion = h.idcondicion
+        inner join distrito d on d.iddistrito = h.iddistrito
+        inner join sede s on s.idsede = h.idsede
+        where
+         ( v_filtro_hospital is null OR h.idhospital = v_filtro_hospital);
+    
+    
+begin
+    
+    v_opciones:= opcion;
+    
+    if v_opciones = 'listar' then
+        dbms_output.put_line('entra 1');
+        for hs in hospitales loop
+            dbms_output.put_line('Hospital: ' || hs.nombre);
+            dbms_output.put_line('Gerente: ' || hs.descgerente);
+            dbms_output.put_line('Condicion: ' || hs.desccondicion);
+            dbms_output.put_line('Distrito: ' || hs.descdistrito);
+            dbms_output.put_line('Sede: ' || hs.descsede);
+            dbms_output.put_line('--------------------------------------');
+        end loop;
+    elsif p_filtro_hospital != null  then
+        dbms_output.put_line('entra 2');
+        v_filtro_hospital:= p_filtro_hospital;
+        
+        for hs in hospitales loop
+            dbms_output.put_line('Hospital: ' || hs.nombre);
+            dbms_output.put_line('Gerente: ' || hs.descgerente);
+            dbms_output.put_line('Condicion: ' || hs.desccondicion);
+            dbms_output.put_line('Distrito: ' || hs.descdistrito);
+            dbms_output.put_line('Sede: ' || hs.descsede);
+            dbms_output.put_line('--------------------------------------');
+        end loop;
+        
+    end if;
+    
+end;
+
+
+begin
+    SP_HOSPITAL_LISTAR('listar',2);
+   
+end;

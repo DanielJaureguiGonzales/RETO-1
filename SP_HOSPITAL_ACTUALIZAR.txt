@@ -1,0 +1,142 @@
+create or replace procedure SP_HOSPITAL_ACTUALIZAR(idHospital in number,nombreDistrito in varchar2, new_nombre in varchar2, 
+new_antiguedad in number, new_area in decimal, sede in varchar2, gerente in varchar2, 
+condicion in varchar2, sp_mensaje out varchar2)
+is
+
+v_hospital_exist number;
+v_idHospital number;
+hospital_not_found exception; 
+
+v_gerente_exist number;
+v_gerente_newId number;
+v_nameGerente varchar2(50);
+gerente_not_found exception; 
+
+v_condicion_exist number;
+v_condicion_newId number;
+v_nameCondicion varchar2(50);
+condicion_not_found exception; 
+
+v_distrito_exist number;
+v_distrito_newId number;
+v_nameDistrito varchar2(50);
+distrito_not_found exception; 
+
+v_sede_exist number;
+v_sede_newId number;
+v_nameSede varchar2(50);
+sede_not_found exception; 
+
+begin
+   
+    -- PRIMERO DEBEMOS VERIFICAR SI EL DATO A ACTUALIZAR, EXISTA EN LA BASE DE DATOS
+    v_idHospital:= idHospital;
+    v_nameGerente:= gerente;
+    v_nameCondicion:= condicion;
+    v_nameDistrito:= nombreDistrito;
+    v_nameSede:= sede;
+    
+    select count(*)
+    into v_hospital_exist
+    from Hospital H
+    where H.idhospital = v_idHospital;
+    
+    if v_hospital_exist = 0 then
+        raise gerente_not_found;
+    end if;
+
+    -- SEGUNDO DEBEMOS VERIFICAR SI LOS DATOS INGRESADO EXISTEN EN LA BASE DE DATOS
+    
+    -- gerente
+    
+    select count(*)
+    into v_gerente_exist
+    from Gerente g
+    where g.descgerente = v_nameGerente;
+    
+    if v_gerente_exist = 0 then
+        raise gerente_not_found;
+    end if;
+
+    select g.idgerente
+    into v_gerente_newId
+    from Gerente g
+    where g.descgerente = v_nameGerente;
+
+    -- condicion
+    
+    select count(*)
+    into v_condicion_exist
+    from Condicion c
+    where c.desccondicion = v_nameCondicion;
+    
+    if v_condicion_exist = 0 then
+        raise condicion_not_found;
+    end if;
+
+    select c.idcondicion
+    into v_condicion_newId
+    from Condicion c
+    where c.desccondicion = v_nameCondicion;
+    
+
+    -- distrito
+    select count(*)
+    into v_distrito_exist
+    from Distrito d
+    where d.descdistrito = v_nameDistrito;
+    
+    if v_distrito_exist = 0 then
+        raise distrito_not_found;
+    end if;
+    
+    select d.iddistrito
+    into v_distrito_newId
+    from Distrito d
+    where d.descdistrito = v_nameDistrito;
+    
+    -- sede
+    
+    select count(*)
+    into v_sede_exist
+    from Sede s
+    where s.descsede = v_nameSede;
+    
+    if v_sede_exist = 0 then
+        raise sede_not_found;
+    end if;
+    
+    select s.idsede
+    into v_sede_newId
+    from Sede s
+    where s.descsede = v_nameSede;
+    
+    update HOSPITAL SET iddistrito = v_distrito_newid, nombre = new_nombre, antiguedad = new_antiguedad , area = new_area , idsede = v_sede_newId , idgerente = v_gerente_newId, idcondicion = v_condicion_newId , fecharegistro = sysdate
+    where idhospital = v_idHospital;
+    commit;
+
+    sp_mensaje:='Se actualizaron los datos del id ingresado';
+    
+exception 
+
+when hospital_not_found then
+
+    sp_mensaje:='No se encontró un hospital con el id ingresado';
+    
+when gerente_not_found then
+
+    sp_mensaje:='No se encontró al gerente que intentó ingresar';
+    
+when condicion_not_found then
+
+    sp_mensaje:='No se encontró la condicion que intentó ingresar';    
+    
+when distrito_not_found then
+
+    sp_mensaje:='No se encontró el distrito que intentó ingresar';     
+ 
+when sede_not_found then
+
+    sp_mensaje:='No se encontró el tipo de sede que intentó ingresar'; 
+    
+end;
